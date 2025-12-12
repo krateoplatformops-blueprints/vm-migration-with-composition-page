@@ -17,7 +17,7 @@ spec:
       apiVersion: forklift.konveyor.io/v1beta1
       kind: Provider
       name: host
-      namespace: {{ .Release.Namespace }}
+      namespace: openshift-mtv
     source:
       apiVersion: forklift.konveyor.io/v1beta1
       kind: Provider
