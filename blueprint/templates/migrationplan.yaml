@@ -26,8 +26,7 @@ spec:
   preserveStaticIPs: false
   type: cold
   vms:
-    - id: '1'
-      name: test-migration-1
+{{ toYaml .Values.plan.vms | nindent 4 }}
   map:
     network:
       apiVersion: forklift.konveyor.io/v1beta1

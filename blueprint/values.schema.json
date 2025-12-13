@@ -2,33 +2,39 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "additionalProperties": true,
   "properties": {
-    "esxi": {
+    "plan": {
       "additionalProperties": false,
-      "description": "ESXi credentials",
+      "description": "Plan to migrate virtual machines to migrate",
       "properties": {
-        "password": {
-          "default": "",
-          "description": "ESXi password",
-          "title": "password",
-          "type": "string"
-        },
-        "user": {
-          "default": "",
-          "description": "ESXi username",
-          "title": "user",
-          "type": "string"
+        "vms": {
+          "description": "List of virtual machines to migrate",
+          "items": {
+            "properties": {
+              "id": {
+                "description": "Id of the virtual machine to migrate",
+                "type": "string"
+              },
+              "name": {
+                "description": "Name of the virtual machine to migrate",
+                "type": "string"
+              }
+            },
+            "required": [
+              "id",
+              "name"
+            ],
+            "type": "object"
+          },
+          "title": "vms",
+          "type": "array"
         }
       },
-      "required": [
-        "user",
-        "password"
-      ],
-      "title": "esxi",
+      "title": "plan",
       "type": "object"
     }
   },
   "required": [
-    "esxi"
+    "plan"
   ],
   "type": "object"
 }

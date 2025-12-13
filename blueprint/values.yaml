@@ -1,18 +1,23 @@
 # @schema
 # type: object
 # required: true
-# description: ESXi credentials
+# description: Plan to migrate virtual machines to migrate
 # @schema
-esxi:
+plan:
   # @schema
-  # type: string
-  # required: true
-  # description: ESXi username
+  # description: List of virtual machines to migrate
+  # type: array
+  # items:
+  #   type: object
+  #   required: [id, name]
+  #   properties:
+  #     id:
+  #       type: string
+  #       description: Id of the virtual machine to migrate
+  #     name:
+  #       type: string
+  #       description: Name of the virtual machine to migrate
   # @schema
-  user: ""
-  # @schema
-  # type: string
-  # required: true
-  # description: ESXi password
-  # @schema
-  password: ""
+  vms:
+    - id: "1"
+      name: "test-migration-1"
