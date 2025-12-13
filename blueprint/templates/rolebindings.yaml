@@ -4,7 +4,7 @@ metadata:
   name: {{ .Release.Name }}-provider-reader-binding
 subjects:
   - kind: ServiceAccount
-    name: vmmigrations-v0-2-1
+    name: vmmigrationwithcompositionpages-v0-1-1
     namespace: {{ .Release.Namespace }}
 roleRef:
   kind: Role
@@ -17,7 +17,7 @@ metadata:
   name: {{ .Release.Name }}-virt-creator-binding
 subjects:
   - kind: ServiceAccount
-    name: vmmigrations-v0-2-1
+    name: vmmigrationwithcompositionpages-v0-1-1
     namespace: {{ .Release.Namespace }}
 roleRef:
   kind: Role
