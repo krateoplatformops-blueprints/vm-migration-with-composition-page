@@ -1,11 +1,4 @@
-# VM Migration for VMWare to KubeVirt with Forklift
-
-
-```sh
-
-```
-
-# *VM Migration from VMWare to KubeVirt with Forklift* Blueprint
+# *VM Migration from VMWare to KubeVirt with Forklift* Blueprint with Composition Page
 
 ## Overview
 
@@ -106,24 +99,27 @@ Download Helm Chart values:
 ```sh
 helm repo add marketplace https://marketplace.krateo.io
 helm repo update marketplace
-helm inspect values marketplace/vm-migration --version 0.1.1 > ~/vm-migration-values.yaml
+helm inspect values marketplace/vm-migration-with-composition-page --version 0.1.3 > ~/vm-migration-with-composition-page-values.yaml
 ```
 
 Modify the *vm-migration-values.yaml* file as the following example:
 
 ```yaml
-
+plan:
+  vms:
+    - id: "1"
+      name: "vm-1"
 ```
 
 Install the Blueprint:
 
 ```sh
-helm install <release-name> vm-migration \
+helm install <release-name> vm-migration-with-composition-page \
   --repo https://marketplace.krateo.io \
   --namespace <release-namespace> \
   --create-namespace \
-  -f ~/vm-migration-values.yaml \
-  --version 0.1.1 \
+  -f ~/vm-migration-with-composition-page-values.yaml \
+  --version 0.1.3 \
   --wait
 ```
 
@@ -136,13 +132,13 @@ cat <<EOF | kubectl apply -f -
 apiVersion: core.krateo.io/v1alpha1
 kind: CompositionDefinition
 metadata:
-  name: vm-migration
+  name: vm-migration-with-composition-page
   namespace: openshift-mtv
 spec:
   chart:
-    repo: vm-migration
+    repo: vm-migration-with-composition-page
     url: https://marketplace.krateo.io
-    version: 0.1.1
+    version: 0.1.3
 EOF
 ```
 
@@ -150,8 +146,8 @@ Install the Blueprint using, as metadata.name, the *Composition* name (the Helm 
 
 ```sh
 cat <<EOF | kubectl apply -f -
-apiVersion: composition.krateo.io/v0-1-1
-kind: VmMigration
+apiVersion: composition.krateo.io/v0-1-3
+kind: VmMigrationWithCompositionPage
 metadata:
   name: ovh-rosa-composition
   namespace: openshift-mtv
@@ -159,7 +155,7 @@ spec:
   plan:
     vms:
     - id: "1"
-      name: test-migration-1
+      name: "vm-1"
 EOF
 ```
 
@@ -176,7 +172,7 @@ spec:
   chart:
     repo: portal-blueprint-page
     url: https://marketplace.krateo.io
-    version: 1.1.1
+    version: 1.1.2
 EOF
 ```
 
@@ -184,22 +180,24 @@ Install the Blueprint using, as metadata.name, the *Blueprint* name (the Helm Ch
 
 ```sh
 cat <<'EOF' | kubectl apply -f -
-apiVersion: composition.krateo.io/v1-1-1
+apiVersion: composition.krateo.io/v1-1-2
 kind: PortalBlueprintPage
 metadata:
-  name: vm-migration
+  name: vm-migration-with-composition-page
   namespace: openshift-mtv
 spec:
   blueprint:
-    repo: vm-migration
+    repo: vm-migration-with-composition-page
     url: https://marketplace.krateo.io
-    version: 0.1.1
+    version: 0.1.3
     hasPage: true
     credentials: {}
   form:
     widgetData:
       schema: {}
-      objectFields: []
+      objectFields:
+        - path: plan.vms
+          displayField: name
       submitActionId: submit-action-from-string-schema
       actions:
         rest:
@@ -248,40 +246,20 @@ spec:
                   required: ["name", "namespace"]
                 }
               } | tostring as $injected
-            | ($prefix + $injected[:-1] + "," + $rest[1:]) as $withComposition
-
-            # --- ensure top-level "required" includes "composition" ---
-            | (
-                if ($withComposition | test("\n  \"required\": \\[")) then
-                  if ($withComposition | test("\n  \"required\": \\[[^\\]]*\"composition\"")) then
-                    # "composition" already present at top-level
-                    $withComposition
-                  else
-                    # prepend "composition" to existing top-level required array
-                    ($withComposition
-                    | gsub("\n  \"required\": \\["; "\n  \"required\": [\"composition\", "))
-                  end
-                else
-                  # no top-level required: insert before top-level "type": "object"
-                  ($withComposition | index("\n  \"type\": \"object\"")) as $tidx
-                  | ($withComposition[0:$tidx+1]) as $p2
-                  | ($withComposition[$tidx+1:]) as $r2
-                  | $p2 + "  \"required\": [\"composition\"],\n" + $r2
-                end
-              )
+            | ($prefix + $injected[:-1] + "," + $rest[1:])
           }
     resourcesRefsTemplate:
       iterator: ${ .allowedNamespacesWithResource[] }
       template:
         id: composition-to-post
-        apiVersion: composition.krateo.io/v0-1-1
+        apiVersion: composition.krateo.io/v0-1-3
         namespace: ${ .namespace }
         resource: ${ .resource }
         verb: POST
     apiRef:
       name: '{{ .Values.global.compositionKind | lower }}-{{ .Values.global.compositionName }}-restaction-schema-override-allows-ns'
       namespace: ""
-    hasPage: false
+    hasPage: true
     instructions: |
       # *VM Migration from VMWare to KubeVirt with Forklift* Blueprint
 
@@ -299,11 +277,9 @@ spec:
 
       For this blueprint to function correctly, your Kubernetes cluster **must** have the following operators installed and running on the target Kubernetes cluster. Please follow their official documentation for installation instructions.
 
-      1.  **KubeVirt Operator:**
-          -   **Purpose:** Manages KubeVirt virtual machine resources within the Kubernetes cluster.
+      1.  **KubeVirt Operator**: manages KubeVirt virtual machine resources within the Kubernetes cluster.
 
-      2.  **Forklift Operator:**
-          -   **Purpose:** Orchestrates the migration of virtual machines from a source environment (like VMware) to a KubeVirt environment.
+      2.  **Forklift Operator**: orchestrates the migration of virtual machines from a source environment (like VMware) to a KubeVirt environment.
           
   panel:
     markdown: Click here to deploy a **{{ .Values.global.compositionName }}** composition
@@ -321,7 +297,7 @@ spec:
         name: fa-cubes
       items:
         - resourceRefId: blueprint-panel-markdown
-      title: GitHub Scaffolding with Composition Page
+      title: VM Migration from VMware ESXi to OpenShift Virtualization
       actions:
         openDrawer:
           - id: blueprint-click-action
